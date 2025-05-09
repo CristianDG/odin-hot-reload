@@ -14,6 +14,12 @@ Metadata :: struct {
   __swap: bool,
 }
 
+when ODIN_OS == .Windows {
+  PLATFORM_ERROR_FILE_NOT_FOUND : os.Platform_Error : .FILE_NOT_FOUND
+} else when ODIN_OS == .Linux {
+  PLATFORM_ERROR_FILE_NOT_FOUND : os.Platform_Error : .ENOENT
+}
+
 load_lib :: proc(symbol_table: ^$T, metadata: ^Metadata, file_path: string) -> (new: bool, ok: bool)
 {
   ensure(metadata != nil)
@@ -34,7 +40,7 @@ load_lib :: proc(symbol_table: ^$T, metadata: ^Metadata, file_path: string) -> (
     return false, !first_load
   }
 
-  can_create_file := tmp_dlib_stats_error == os.General_Error.Not_Exist
+  can_create_file := tmp_dlib_stats_error == PLATFORM_ERROR_FILE_NOT_FOUND
 
   lib_is_old := time.diff(
     dlib_stats.modification_time,
@@ -63,8 +69,8 @@ load_lib :: proc(symbol_table: ^$T, metadata: ^Metadata, file_path: string) -> (
       metadata.__swap = !metadata.__swap
 
       old_tmp_file_del_err := os.remove(old_tmp_file_path)
-      // FIXME: olhar se funciona no linux
-      if old_tmp_file_del_err != nil && old_tmp_file_del_err != .FILE_NOT_FOUND {
+
+      if old_tmp_file_del_err != nil && old_tmp_file_del_err != PLATFORM_ERROR_FILE_NOT_FOUND {
         log.errorf("could not delete temporary file %s with error %v", old_tmp_file_path, old_tmp_file_del_err)
         // FIXME: o que deveria retornar aqui? já que na proxima vez isso pode dar um erro
         //        por enquanto vou retornar o mesmo já que deu certo
