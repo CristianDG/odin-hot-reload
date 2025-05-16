@@ -40,7 +40,7 @@ load_lib :: proc(symbol_table: ^$T, metadata: ^Metadata, file_path: string) -> (
     return false, !first_load
   }
 
-  can_create_file := tmp_dlib_stats_error == PLATFORM_ERROR_FILE_NOT_FOUND
+  can_create_file := tmp_dlib_stats_error == PLATFORM_ERROR_FILE_NOT_FOUND || tmp_dlib_stats_error == .Not_Exist
 
   lib_is_old := time.diff(
     dlib_stats.modification_time,
